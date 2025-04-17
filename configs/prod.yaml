@@ -1,0 +1,6 @@
+env: "prod" # "prod", "dev"
+jwt_duration: 1h
+http_address: "localhost:8080"
+logger_format: "json" # "text", "json"
+migrations_dir: "./migrations"
+request_timeout: 10s
