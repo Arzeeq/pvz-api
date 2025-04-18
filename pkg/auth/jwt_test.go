@@ -22,7 +22,7 @@ func TestCreateJWTWithoutError(t *testing.T) {
 func TestGetClaimsJWT(t *testing.T) {
 	type Claims struct {
 		jwt.RegisteredClaims
-		Payload string
+		Payload string `json:"payload"`
 	}
 
 	jwtDuration := time.Minute
@@ -39,12 +39,11 @@ func TestGetClaimsJWT(t *testing.T) {
 	token, err := CreateJWT(jwtSecret, claims)
 	require.NoError(t, err, "JWTCreate must execute without error")
 
-	var newClaims Claims
-	err = GetClaimsJWT(token, jwtSecret, &newClaims)
+	newClaims, err := GetClaimsJWT(token, jwtSecret)
 	require.NoError(t, err, "Failed to get claims")
 
-	claimsDuration := claims.ExpiresAt.Sub(claims.IssuedAt.Time)
+	payload, ok := newClaims["payload"].(string)
+	require.True(t, ok)
 
-	require.Equal(t, jwtDuration, claimsDuration, "Incorrect duration")
-	require.Equal(t, claims.Payload, newClaims.Payload, "Incorrect payload")
+	require.Equal(t, claims.Payload, payload, "Incorrect payload")
 }

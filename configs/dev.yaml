@@ -1,5 +1,5 @@
 env: "dev" # "prod", "dev"
-jwt_duration: 10m
+jwt_duration: 1h
 http_address: "localhost:8080"
 logger_format: "text" # "text", "json"
 migrations_dir: "./migrations"

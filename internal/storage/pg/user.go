@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Arzeeq/pvz-api/internal/dto"
@@ -14,11 +15,15 @@ type UserStorage struct {
 	builder squirrel.StatementBuilderType
 }
 
-func NewUserStorage(pool *pgxpool.Pool) *UserStorage {
+func NewUserStorage(pool *pgxpool.Pool) (*UserStorage, error) {
+	if pool == nil {
+		return nil, errors.New("nil values in NewUserStorage constructor")
+	}
+
 	return &UserStorage{
 		pool:    pool,
 		builder: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
-	}
+	}, nil
 }
 
 func (s *UserStorage) CreateUser(ctx context.Context, payload dto.PostRegisterJSONBody) (*dto.User, error) {

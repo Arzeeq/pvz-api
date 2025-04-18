@@ -13,7 +13,7 @@ var ErrTokenGen = errors.New("failed to generate token")
 
 type JWTClaims struct {
 	jwt.RegisteredClaims
-	Role string
+	Role string `json:"role"`
 }
 
 func NewJWTClaims(role string, duration time.Duration) *JWTClaims {

@@ -38,6 +38,8 @@ components:
           type: string
           enum: [Москва, Санкт-Петербург, Казань]
           x-enumNames: [Moscow, Saint-Petersburg, Kazan]
+          x-oapi-codegen-extra-tags:
+            validate: "oneof=Москва Санкт-Петербург Казань"
       required: [city]
 
     Reception:

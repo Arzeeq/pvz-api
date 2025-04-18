@@ -17,7 +17,28 @@ func CreateJWT(secret []byte, claims jwt.Claims) (string, error) {
 	return signedToken, nil
 }
 
-func GetClaimsJWT(token string, secret []byte, claims jwt.Claims) error {
+// func GetClaimsJWT(token string, secret []byte, claims jwt.Claims) error {
+// 	keyFunc := func(t *jwt.Token) (interface{}, error) {
+// 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+// 		}
+
+// 		return secret, nil
+// 	}
+
+// 	parsedToken, err := jwt.ParseWithClaims(token, claims, keyFunc)
+// 	if err != nil {
+// 		return fmt.Errorf("token parsing error: %v", err)
+// 	}
+
+// 	if !parsedToken.Valid {
+// 		return fmt.Errorf("invalid token")
+// 	}
+
+// 	return nil
+// }
+
+func GetClaimsJWT(token string, secret []byte) (map[string]interface{}, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
@@ -26,14 +47,25 @@ func GetClaimsJWT(token string, secret []byte, claims jwt.Claims) error {
 		return secret, nil
 	}
 
-	parsedToken, err := jwt.ParseWithClaims(token, claims, keyFunc)
+	// parsedToken, err := jwt.ParseWithClaims(token, claims, keyFunc)
+	parsedToken, err := jwt.Parse(token, keyFunc)
 	if err != nil {
-		return fmt.Errorf("token parsing error: %v", err)
+		return nil, fmt.Errorf("token parsing error: %v", err)
 	}
 
 	if !parsedToken.Valid {
-		return fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
-	return nil
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("invalid claims format")
+	}
+
+	result := make(map[string]interface{})
+	for k, v := range claims {
+		result[k] = v
+	}
+
+	return result, nil
 }

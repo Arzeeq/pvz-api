@@ -65,7 +65,7 @@ type Error struct {
 
 // PVZ defines model for PVZ.
 type PVZ struct {
-	City             PVZCity             `json:"city"`
+	City             PVZCity             `json:"city" validate:"oneof=Москва Санкт-Петербург Казань"`
 	Id               *openapi_types.UUID `json:"id,omitempty"`
 	RegistrationDate *time.Time          `json:"registrationDate,omitempty"`
 }
