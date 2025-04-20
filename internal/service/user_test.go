@@ -12,21 +12,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockUserStorage struct {
+type mockUserStorage struct {
 	mock.Mock
 }
 
-func (m *MockUserStorage) CreateUser(ctx context.Context, payload dto.PostRegisterJSONBody) (*dto.User, error) {
+func (m *mockUserStorage) CreateUser(ctx context.Context, payload dto.PostRegisterJSONBody) (*dto.User, error) {
 	args := m.Called(ctx, payload)
 	return args.Get(0).(*dto.User), args.Error(1)
 }
 
-func (m *MockUserStorage) GetUserPassword(ctx context.Context, email string) (string, error) {
+func (m *mockUserStorage) GetUserPassword(ctx context.Context, email string) (string, error) {
 	args := m.Called(ctx, email)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserStorage) GetUserByEmail(ctx context.Context, email string) (*dto.User, error) {
+func (m *mockUserStorage) GetUserByEmail(ctx context.Context, email string) (*dto.User, error) {
 	args := m.Called(ctx, email)
 	return args.Get(0).(*dto.User), args.Error(1)
 }
@@ -51,14 +51,14 @@ func TestNewUserService(t *testing.T) {
 		{
 			name:         "success",
 			tokenService: new(MockTokenService),
-			userStorage:  new(MockUserStorage),
+			userStorage:  new(mockUserStorage),
 			err:          nil,
 			isNil:        false,
 		},
 		{
 			name:         "nil token service",
 			tokenService: nil,
-			userStorage:  new(MockUserStorage),
+			userStorage:  new(mockUserStorage),
 			err:          ErrNilInConstruct,
 			isNil:        true,
 		},
@@ -97,14 +97,14 @@ func TestUserService_RegisterUser(t *testing.T) {
 		Role:  "user",
 	}
 
-	storage1 := new(MockUserStorage)
-	storage2 := new(MockUserStorage)
+	storage1 := new(mockUserStorage)
+	storage2 := new(mockUserStorage)
 	storage1.On("CreateUser", ctx, mock.Anything).Return(expectedUser, nil)
 	storage2.On("CreateUser", ctx, mock.Anything).Return(&dto.User{}, ErrUserExists)
 
 	for _, testcase := range []struct {
 		name         string
-		storage      *MockUserStorage
+		storage      *mockUserStorage
 		tokenService TokenServicer
 		expectedUser *dto.User
 		err          error
@@ -125,14 +125,18 @@ func TestUserService_RegisterUser(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
+			// arrange
 			service := &UserService{
 				storage:      testcase.storage,
 				tokenService: testcase.tokenService,
 			}
+
+			// act
 			user, err := service.RegisterUser(ctx, payload)
+
+			// assert
 			require.ErrorIs(t, err, testcase.err)
 			require.Equal(t, user, testcase.expectedUser)
-
 			testcase.storage.AssertExpectations(t)
 		})
 	}
@@ -165,14 +169,14 @@ func TestUserService_LoginUser(t *testing.T) {
 
 	for _, testcase := range []struct {
 		name         string
-		storageSetup func(*MockUserStorage)
+		storageSetup func(*mockUserStorage)
 		tokenService *MockTokenService
 		token        string
 		err          error
 	}{
 		{
 			name: "success",
-			storageSetup: func(m *MockUserStorage) {
+			storageSetup: func(m *mockUserStorage) {
 				m.On("GetUserPassword", ctx, string(payload.Email)).Return(hashedPassword, nil)
 				m.On("GetUserByEmail", ctx, string(payload.Email)).Return(expectedUser, nil)
 			},
@@ -182,7 +186,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		},
 		{
 			name: "get password error",
-			storageSetup: func(m *MockUserStorage) {
+			storageSetup: func(m *mockUserStorage) {
 				m.On("GetUserPassword", ctx, string(payload.Email)).Return("", errors.New("error"))
 			},
 			tokenService: tokenService,
@@ -191,7 +195,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		},
 		{
 			name: "password mismatch",
-			storageSetup: func(m *MockUserStorage) {
+			storageSetup: func(m *mockUserStorage) {
 				m.On("GetUserPassword", ctx, string(payload.Email)).Return("wrong_hash", nil)
 			},
 			tokenService: tokenService,
@@ -200,7 +204,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		},
 		{
 			name: "get user error",
-			storageSetup: func(m *MockUserStorage) {
+			storageSetup: func(m *mockUserStorage) {
 				m.On("GetUserPassword", ctx, string(payload.Email)).Return(hashedPassword, nil)
 				m.On("GetUserByEmail", ctx, string(payload.Email)).Return(&dto.User{}, errors.New("error"))
 			},
@@ -210,7 +214,7 @@ func TestUserService_LoginUser(t *testing.T) {
 		},
 		{
 			name: "token generation error",
-			storageSetup: func(m *MockUserStorage) {
+			storageSetup: func(m *mockUserStorage) {
 				m.On("GetUserPassword", ctx, string(payload.Email)).Return(hashedPassword, nil)
 				m.On("GetUserByEmail", ctx, string(payload.Email)).Return(expectedUser, nil)
 			},
@@ -220,17 +224,20 @@ func TestUserService_LoginUser(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
-			storage := new(MockUserStorage)
+			// arrange
+			storage := new(mockUserStorage)
 			testcase.storageSetup(storage)
 			service := &UserService{
 				storage:      storage,
 				tokenService: testcase.tokenService,
 			}
 
+			// act
 			token, err := service.LoginUser(ctx, payload)
+
+			// assert
 			require.ErrorIs(t, err, testcase.err)
 			require.Equal(t, testcase.token, token)
-
 			storage.AssertExpectations(t)
 			testcase.tokenService.AssertExpectations(t)
 		})

@@ -24,6 +24,8 @@ func New(env string, format string) *MyLogger {
 	var loggerLevel slog.Level
 
 	switch env {
+	case config.EnvTest:
+		loggerLevel = slog.LevelDebug
 	case config.EnvDev:
 		loggerLevel = slog.LevelDebug
 	case config.EnvProd:

@@ -13,16 +13,17 @@ import (
 const (
 	EnvDev  = "dev"
 	EnvProd = "prod"
+	EnvTest = "test"
 )
 
 type Config struct {
 	DBParam
 	Env            string        `yaml:"env" env-required:"true"`
 	JWTDuration    time.Duration `yaml:"jwt_duration" env-required:"true"`
-	HTTPAddress    string        `yaml:"http_address" env-required:"true"`
 	LoggerFormat   string        `yaml:"logger_format"`
 	MigrationDir   string        `yaml:"migrations_dir"`
 	RequestTimeout time.Duration `yaml:"request_timeout" env-default:"5s"`
+	ConnectionStr  string        `yaml:"-"`
 	JWTSecret      string        `yaml:"-"`
 	ServerPort     int           `yaml:"-"`
 }
@@ -63,6 +64,7 @@ func MustLoad(configPath string) *Config {
 	cfg.DBHost = os.Getenv("DATABASE_HOST")
 	cfg.DBPort = os.Getenv("DATABASE_PORT")
 	cfg.DBName = os.Getenv("DATABASE_NAME")
+	cfg.ConnectionStr = cfg.DBParam.GetConnStr()
 
 	return &cfg
 }

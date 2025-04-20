@@ -19,10 +19,10 @@ import (
 )
 
 type Server struct {
-	cfg  *config.Config
-	l    *logger.MyLogger
-	r    chi.Router
-	pool *pgxpool.Pool
+	cfg    *config.Config
+	l      *logger.MyLogger
+	router chi.Router
+	pool   *pgxpool.Pool
 }
 
 func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
@@ -31,7 +31,7 @@ func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
 	}
 
 	s := Server{cfg: cfg, l: logger}
-	pool, err := pg.InitDB(cfg.DBParam.GetConnStr())
+	pool, err := pg.InitDB(cfg.ConnectionStr)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
 
 	// mounting router
 	r := chi.NewRouter()
-	s.r = r
+	s.router = r
 
 	// without authorization
 	r.Post("/dummyLogin", authHandler.DummyLogin)
@@ -141,10 +141,14 @@ func (s *Server) Run() error {
 	s.l.Info("Migrations have been done")
 
 	s.l.Info("Application has started", slog.Int("port", s.cfg.ServerPort))
-	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", s.cfg.ServerPort), s.r)
+	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", s.cfg.ServerPort), s.router)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.pool.Close()
 	return nil
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
 }

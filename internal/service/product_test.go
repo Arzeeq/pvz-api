@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -13,26 +12,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockProductStorage struct {
+type mockProductStorage struct {
 	mock.Mock
 }
 
-func (m *MockProductStorage) CreateProduct(ctx context.Context, productDto dto.PostProductsJSONBody) (*dto.Product, error) {
+func (m *mockProductStorage) CreateProduct(ctx context.Context, productDto dto.PostProductsJSONBody) (*dto.Product, error) {
 	args := m.Called(ctx, productDto)
 	return args.Get(0).(*dto.Product), args.Error(1)
 }
 
-func (m *MockProductStorage) DeleteProduct(ctx context.Context, productID openapi_types.UUID) error {
+func (m *mockProductStorage) DeleteProduct(ctx context.Context, productID openapi_types.UUID) error {
 	args := m.Called(ctx, productID)
 	return args.Error(0)
 }
 
-func (m *MockProductStorage) GetLastProduct(ctx context.Context, pvzId openapi_types.UUID) (*dto.Product, error) {
+func (m *mockProductStorage) GetLastProduct(ctx context.Context, pvzId openapi_types.UUID) (*dto.Product, error) {
 	args := m.Called(ctx, pvzId)
 	return args.Get(0).(*dto.Product), args.Error(1)
 }
 
-func (m *MockProductStorage) GetReceptionProducts(ctx context.Context, receptionId openapi_types.UUID) []dto.Product {
+func (m *mockProductStorage) GetReceptionProducts(ctx context.Context, receptionId openapi_types.UUID) []dto.Product {
 	args := m.Called(ctx, receptionId)
 	return args.Get(0).([]dto.Product)
 }
@@ -45,7 +44,7 @@ func TestNewProductService(t *testing.T) {
 	}{
 		{
 			name:    "successful initialization",
-			storage: new(MockProductStorage),
+			storage: new(mockProductStorage),
 			err:     nil,
 		},
 		{
@@ -84,14 +83,14 @@ func TestProductService_CreateProduct(t *testing.T) {
 	testcases := []struct {
 		name      string
 		input     dto.PostProductsJSONBody
-		mockSetup func(*MockProductStorage)
+		mockSetup func(*mockProductStorage)
 		expected  *dto.Product
 		err       error
 	}{
 		{
 			name:  "successful product creation",
 			input: productDto,
-			mockSetup: func(m *MockProductStorage) {
+			mockSetup: func(m *mockProductStorage) {
 				m.On("CreateProduct", ctx, productDto).
 					Return(&dto.Product{
 						Id:          &testUUID,
@@ -111,7 +110,7 @@ func TestProductService_CreateProduct(t *testing.T) {
 		{
 			name:  "storage error on create",
 			input: productDto,
-			mockSetup: func(m *MockProductStorage) {
+			mockSetup: func(m *mockProductStorage) {
 				m.On("CreateProduct", ctx, productDto).
 					Return(&dto.Product{}, errors.New("storage error"))
 			},
@@ -122,14 +121,17 @@ func TestProductService_CreateProduct(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			storage := new(MockProductStorage)
+			// arrange
+			storage := new(mockProductStorage)
 			testcase.mockSetup(storage)
 
 			service, err := NewProductService(storage)
 			require.NoError(t, err)
-			fmt.Println(service, testcase)
+
+			// act
 			product, err := service.CreateProduct(ctx, testcase.input)
 
+			// assert
 			require.Equal(t, testcase.expected, product)
 			require.ErrorIs(t, testcase.err, err)
 			storage.AssertExpectations(t)
@@ -148,13 +150,13 @@ func TestProductService_DeleteLastProduct(t *testing.T) {
 	testcases := []struct {
 		name      string
 		pvzID     openapi_types.UUID
-		mockSetup func(*MockProductStorage)
+		mockSetup func(*mockProductStorage)
 		err       error
 	}{
 		{
 			name:  "successful deletion",
 			pvzID: pvzID,
-			mockSetup: func(m *MockProductStorage) {
+			mockSetup: func(m *mockProductStorage) {
 				m.On("GetLastProduct", ctx, pvzID).
 					Return(&dto.Product{
 						Id:          &productID,
@@ -170,7 +172,7 @@ func TestProductService_DeleteLastProduct(t *testing.T) {
 		{
 			name:  "error getting last product",
 			pvzID: pvzID,
-			mockSetup: func(m *MockProductStorage) {
+			mockSetup: func(m *mockProductStorage) {
 				m.On("GetLastProduct", ctx, pvzID).
 					Return(&dto.Product{}, errors.New("error"))
 			},
@@ -179,7 +181,7 @@ func TestProductService_DeleteLastProduct(t *testing.T) {
 		{
 			name:  "error deleting product",
 			pvzID: pvzID,
-			mockSetup: func(m *MockProductStorage) {
+			mockSetup: func(m *mockProductStorage) {
 				m.On("GetLastProduct", ctx, pvzID).
 					Return(&dto.Product{
 						Id:          &productID,
@@ -196,13 +198,16 @@ func TestProductService_DeleteLastProduct(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			storage := new(MockProductStorage)
+			// arrange
+			storage := new(mockProductStorage)
 			testcase.mockSetup(storage)
-
 			service, err := NewProductService(storage)
 			require.NoError(t, err)
+
+			// act
 			err = service.DeleteLastProduct(ctx, testcase.pvzID)
 
+			// assert
 			require.ErrorIs(t, err, testcase.err)
 			storage.AssertExpectations(t)
 		})

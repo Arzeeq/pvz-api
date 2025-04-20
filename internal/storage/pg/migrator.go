@@ -1,7 +1,6 @@
 package pg
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -49,7 +48,7 @@ func (m *Migrator) Down() error {
 
 func (m *Migrator) initMigrate() (*migrate.Migrate, error) {
 	if _, err := os.Stat(m.migrationsDir); os.IsNotExist(err) {
-		return nil, errors.New("migrations directory does not exist")
+		return nil, fmt.Errorf("migrations directory does not exist: %w", err)
 	}
 
 	source, err := iofs.New(os.DirFS(m.migrationsDir), ".")

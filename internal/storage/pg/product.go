@@ -70,7 +70,11 @@ func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostP
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			fmt.Println("error rollback transaction")
+		}
+	}()
 
 	receptionQuery, receptionArgs, err := s.builder.
 		Select("id").

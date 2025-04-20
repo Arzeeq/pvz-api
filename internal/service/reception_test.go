@@ -12,26 +12,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockReceptionStorage struct {
+type mockReceptionStorage struct {
 	mock.Mock
 }
 
-func (m *MockReceptionStorage) CreateReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
+func (m *mockReceptionStorage) CreateReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
 	args := m.Called(ctx, pvzID)
 	return args.Get(0).(*dto.Reception), args.Error(1)
 }
 
-func (m *MockReceptionStorage) GetPVZReceptionsFiltered(ctx context.Context, pvzID openapi_types.UUID, startDate, endDate time.Time) []dto.Reception {
+func (m *mockReceptionStorage) GetPVZReceptionsFiltered(ctx context.Context, pvzID openapi_types.UUID, startDate, endDate time.Time) []dto.Reception {
 	args := m.Called(ctx, pvzID, startDate, endDate)
 	return args.Get(0).([]dto.Reception)
 }
 
-func (m *MockReceptionStorage) GetActiveReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
+func (m *mockReceptionStorage) GetActiveReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
 	args := m.Called(ctx, pvzID)
 	return args.Get(0).(*dto.Reception), args.Error(1)
 }
 
-func (m *MockReceptionStorage) CloseReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
+func (m *mockReceptionStorage) CloseReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
 	args := m.Called(ctx, pvzID)
 	return args.Get(0).(*dto.Reception), args.Error(1)
 }
@@ -45,7 +45,7 @@ func TestNewReceptionService(t *testing.T) {
 	}{
 		{
 			name:    "success",
-			storage: new(MockReceptionStorage),
+			storage: new(mockReceptionStorage),
 			err:     nil,
 		},
 		{
@@ -75,14 +75,14 @@ func TestReceptionService_CreateReception(t *testing.T) {
 	testcases := []struct {
 		name      string
 		pvzID     openapi_types.UUID
-		mockSetup func(*MockReceptionStorage)
+		mockSetup func(*mockReceptionStorage)
 		expected  *dto.Reception
 		err       error
 	}{
 		{
 			name:  "successful creation",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CreateReception", ctx, testUUID).
 					Return(&dto.Reception{
 						Id:     testUUID,
@@ -100,7 +100,7 @@ func TestReceptionService_CreateReception(t *testing.T) {
 		{
 			name:  "storage error",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CreateReception", ctx, testUUID).
 					Return(&dto.Reception{}, errors.New("storage error"))
 			},
@@ -110,7 +110,7 @@ func TestReceptionService_CreateReception(t *testing.T) {
 		{
 			name:  "active reception exists",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CreateReception", ctx, testUUID).
 					Return(&dto.Reception{}, ErrActiveReception)
 			},
@@ -121,13 +121,16 @@ func TestReceptionService_CreateReception(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			mockStorage := new(MockReceptionStorage)
+			// arrange
+			mockStorage := new(mockReceptionStorage)
 			testcase.mockSetup(mockStorage)
-
 			service, err := NewReceptionService(mockStorage)
 			require.NoError(t, err)
+
+			// act
 			reception, err := service.CreateReception(ctx, testcase.pvzID)
 
+			// assert
 			require.Equal(t, testcase.expected, reception)
 			require.Equal(t, testcase.err, err)
 			mockStorage.AssertExpectations(t)
@@ -142,14 +145,14 @@ func TestReceptionService_CloseReception(t *testing.T) {
 	tests := []struct {
 		name      string
 		pvzID     openapi_types.UUID
-		mockSetup func(*MockReceptionStorage)
+		mockSetup func(*mockReceptionStorage)
 		expected  *dto.Reception
 		err       error
 	}{
 		{
 			name:  "successful close",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CloseReception", ctx, testUUID).
 					Return(&dto.Reception{
 						Id:     testUUID,
@@ -167,7 +170,7 @@ func TestReceptionService_CloseReception(t *testing.T) {
 		{
 			name:  "storage error",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CloseReception", ctx, testUUID).
 					Return(&dto.Reception{}, errors.New("storage error"))
 			},
@@ -177,7 +180,7 @@ func TestReceptionService_CloseReception(t *testing.T) {
 		{
 			name:  "no active reception to close",
 			pvzID: testUUID,
-			mockSetup: func(m *MockReceptionStorage) {
+			mockSetup: func(m *mockReceptionStorage) {
 				m.On("CloseReception", ctx, testUUID).
 					Return(&dto.Reception{}, errors.New("no active reception"))
 			},
@@ -188,13 +191,16 @@ func TestReceptionService_CloseReception(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockStorage := new(MockReceptionStorage)
+			// arrange
+			mockStorage := new(mockReceptionStorage)
 			tt.mockSetup(mockStorage)
-
 			service, err := NewReceptionService(mockStorage)
 			require.NoError(t, err)
+
+			// act
 			reception, err := service.CloseReception(ctx, tt.pvzID)
 
+			// assert
 			require.Equal(t, tt.expected, reception)
 			require.Equal(t, tt.err, err)
 			mockStorage.AssertExpectations(t)
