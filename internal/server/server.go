@@ -58,21 +58,40 @@ func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
 	// creating services
 	var pvzService *service.PVZService
 	var userService *service.UserService
-	tokenService := service.NewTokenService(cfg.JWTSecret, cfg.JWTDuration)
+	var receptionService *service.ReceptionService
+	var productService *service.ProductService
+	var tokenService *service.TokenService
 	if pvzService, err = service.NewPVZService(pvzStorage, receptionStorage, productStorage); err != nil {
 		return nil, err
 	}
 	if userService, err = service.NewUserService(userStorage, tokenService); err != nil {
 		return nil, err
 	}
+	if receptionService, err = service.NewReceptionService(receptionStorage); err != nil {
+		return nil, err
+	}
+	if productService, err = service.NewProductService(productStorage); err != nil {
+		return nil, err
+	}
+	if tokenService, err = service.NewTokenService([]byte(cfg.JWTSecret), cfg.JWTDuration); err != nil {
+		return nil, err
+	}
 
 	// creting handlers
-	var authHandler *handler.Auth
-	var pvzHandler *handler.PVZ
+	var authHandler *handler.AuthHandler
+	var pvzHandler *handler.PVZHandler
+	var receptionHandler *handler.ReceptionHandler
+	var productHandler *handler.ProductHandler
 	if authHandler, err = handler.NewAuthHandler(userService, tokenService, logger, cfg.RequestTimeout); err != nil {
 		return nil, err
 	}
-	if pvzHandler, err = handler.NewPvzHandler(pvzService, logger, cfg.RequestTimeout); err != nil {
+	if pvzHandler, err = handler.NewPvzHandler(pvzService, receptionService, productService, logger, cfg.RequestTimeout); err != nil {
+		return nil, err
+	}
+	if receptionHandler, err = handler.NewReceptionHandler(receptionService, logger, cfg.RequestTimeout); err != nil {
+		return nil, err
+	}
+	if productHandler, err = handler.NewProductHandler(productService, logger, cfg.RequestTimeout); err != nil {
 		return nil, err
 	}
 
@@ -96,6 +115,9 @@ func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthRoles(logger, []byte(cfg.JWTSecret), dto.UserRoleEmployee))
 
+		r.Post("/receptions", receptionHandler.CreateReception)
+		r.Post("/products", productHandler.CreateProduct)
+		r.Post("/pvz/{pvzId}/delete_last_product", pvzHandler.DeleteLastProduct)
 	})
 
 	// moderator and employee
@@ -103,6 +125,7 @@ func New(cfg *config.Config, logger *logger.MyLogger) (*Server, error) {
 		r.Use(middleware.AuthRoles(logger, []byte(cfg.JWTSecret), dto.UserRoleEmployee, dto.UserRoleModerator))
 
 		r.Get("/pvz", pvzHandler.GetPVZ)
+		r.Post("/pvz/{pvzId}/close_last_reception", pvzHandler.CloseReception)
 	})
 
 	return &s, nil

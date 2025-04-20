@@ -47,7 +47,7 @@ func (s *PVZStorage) CreatePVZ(ctx context.Context, payload dto.PostPvzJSONReque
 		Suffix("RETURNING id, registration_date, city").
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build query: %w", err)
+		return nil, ErrBuildQuery
 	}
 
 	var pvz dto.PVZ
@@ -59,35 +59,47 @@ func (s *PVZStorage) CreatePVZ(ctx context.Context, payload dto.PostPvzJSONReque
 	return &pvz, nil
 }
 
-func (s *PVZStorage) GetPVZ(ctx context.Context, page, limit int) ([]dto.PVZ, error) {
-	offset := (page - 1) * limit
-
+func (s *PVZStorage) GetPVZs(ctx context.Context, params dto.GetPvzParams) ([]dto.PVZ, error) {
+	offset := (*params.Page - 1) * (*params.Limit)
 	query, args, err := s.builder.
-		Select("id", "registration_date", "city").
+		Select("pvz.id", "pvz.registration_date", "pvz.city").
 		From("pvz").
-		OrderBy("registration_date").
-		Limit(uint64(limit)).
+		Join("receptions ON pvz.id = receptions.pvz_id").
+		Where(squirrel.And{
+			squirrel.GtOrEq{"receptions.date_time": *params.StartDate},
+			squirrel.LtOrEq{"receptions.date_time": *params.EndDate},
+		}).
+		GroupBy("pvz.id").
+		OrderBy("pvz.registration_date").
 		Offset(uint64(offset)).
+		Limit(uint64(*params.Limit)).
 		ToSql()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to build PVZ query: %w", err)
+		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
 
 	rows, err := s.pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query PVZs: %w", err)
+		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 	defer rows.Close()
 
 	var pvzs []dto.PVZ
 	for rows.Next() {
 		var pvz dto.PVZ
-		if err := rows.Scan(&pvz.Id, &pvz.RegistrationDate, &pvz.City); err != nil {
+		if err := rows.Scan(
+			&pvz.Id,
+			&pvz.RegistrationDate,
+			&pvz.City,
+		); err != nil {
 			return nil, fmt.Errorf("failed to scan PVZ: %w", err)
 		}
-
 		pvzs = append(pvzs, pvz)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	return pvzs, nil

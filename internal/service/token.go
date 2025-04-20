@@ -32,8 +32,12 @@ type TokenService struct {
 	jwtDuration time.Duration
 }
 
-func NewTokenService(jwtSecret string, jwtDuration time.Duration) *TokenService {
-	return &TokenService{jwtSecret: []byte(jwtSecret), jwtDuration: jwtDuration}
+func NewTokenService(jwtSecret []byte, jwtDuration time.Duration) (*TokenService, error) {
+	if jwtSecret == nil {
+		return nil, ErrNilInConstruct
+	}
+
+	return &TokenService{jwtSecret: jwtSecret, jwtDuration: jwtDuration}, nil
 }
 
 func (s *TokenService) Gen(role string) (dto.Token, error) {

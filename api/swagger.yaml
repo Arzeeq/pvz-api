@@ -41,6 +41,17 @@ components:
           x-oapi-codegen-extra-tags:
             validate: "oneof=Москва Санкт-Петербург Казань"
       required: [city]
+    
+    PVZWithReceptions:
+      type: object
+      properties:
+        pvz:
+          $ref: '#/components/schemas/PVZ'
+        receptions:
+          type: array
+          x-go-type-skip-optional-pointer: true
+          items:
+            $ref: '#/components/schemas/ReceptionWithProducts'
 
     Reception:
       type: object
@@ -48,6 +59,7 @@ components:
         id:
           type: string
           format: uuid
+          x-go-type-skip-optional-pointer: true
         dateTime:
           type: string
           format: date-time
@@ -58,6 +70,19 @@ components:
           type: string
           enum: [in_progress, close]
       required: [dateTime, pvzId, status]
+
+    ReceptionWithProducts:
+      type: object
+      properties:
+        reception:
+            x-order: 1
+            $ref: '#/components/schemas/Reception'
+        products:
+          type: array
+          x-order: 2
+          items:
+            $ref: '#/components/schemas/Product'
+      required: [products, reception]
 
     Product:
       type: object
@@ -261,21 +286,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    pvz:
-                      $ref: '#/components/schemas/PVZ'
-                    receptions:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          reception:
-                            $ref: '#/components/schemas/Reception'
-                          products:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/PVZWithReceptions'
 
   /pvz/{pvzId}/close_last_reception:
     post:

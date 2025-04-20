@@ -17,27 +17,6 @@ func CreateJWT(secret []byte, claims jwt.Claims) (string, error) {
 	return signedToken, nil
 }
 
-// func GetClaimsJWT(token string, secret []byte, claims jwt.Claims) error {
-// 	keyFunc := func(t *jwt.Token) (interface{}, error) {
-// 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-// 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-// 		}
-
-// 		return secret, nil
-// 	}
-
-// 	parsedToken, err := jwt.ParseWithClaims(token, claims, keyFunc)
-// 	if err != nil {
-// 		return fmt.Errorf("token parsing error: %v", err)
-// 	}
-
-// 	if !parsedToken.Valid {
-// 		return fmt.Errorf("invalid token")
-// 	}
-
-// 	return nil
-// }
-
 func GetClaimsJWT(token string, secret []byte) (map[string]interface{}, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -47,7 +26,6 @@ func GetClaimsJWT(token string, secret []byte) (map[string]interface{}, error) {
 		return secret, nil
 	}
 
-	// parsedToken, err := jwt.ParseWithClaims(token, claims, keyFunc)
 	parsedToken, err := jwt.Parse(token, keyFunc)
 	if err != nil {
 		return nil, fmt.Errorf("token parsing error: %v", err)

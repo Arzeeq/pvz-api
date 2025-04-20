@@ -73,6 +73,12 @@ type PVZ struct {
 // PVZCity defines model for PVZ.City.
 type PVZCity string
 
+// PVZWithReceptions defines model for PVZWithReceptions.
+type PVZWithReceptions struct {
+	Pvz        *PVZ                    `json:"pvz,omitempty"`
+	Receptions []ReceptionWithProducts `json:"receptions,omitempty"`
+}
+
 // Product defines model for Product.
 type Product struct {
 	DateTime    *time.Time          `json:"dateTime,omitempty"`
@@ -86,14 +92,20 @@ type ProductType string
 
 // Reception defines model for Reception.
 type Reception struct {
-	DateTime time.Time           `json:"dateTime"`
-	Id       *openapi_types.UUID `json:"id,omitempty"`
-	PvzId    openapi_types.UUID  `json:"pvzId"`
-	Status   ReceptionStatus     `json:"status"`
+	DateTime time.Time          `json:"dateTime"`
+	Id       openapi_types.UUID `json:"id,omitempty"`
+	PvzId    openapi_types.UUID `json:"pvzId"`
+	Status   ReceptionStatus    `json:"status"`
 }
 
 // ReceptionStatus defines model for Reception.Status.
 type ReceptionStatus string
+
+// ReceptionWithProducts defines model for ReceptionWithProducts.
+type ReceptionWithProducts struct {
+	Products  []Product `json:"products"`
+	Reception Reception `json:"reception"`
+}
 
 // Token defines model for Token.
 type Token = string

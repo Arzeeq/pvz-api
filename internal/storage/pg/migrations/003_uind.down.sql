@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS receptions_one_in_progress_per_pvz;

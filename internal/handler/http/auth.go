@@ -22,7 +22,7 @@ type TokenServicer interface {
 	Gen(role string) (dto.Token, error)
 }
 
-type Auth struct {
+type AuthHandler struct {
 	userService  UserServicer
 	tokenService TokenServicer
 	log          *logger.MyLogger
@@ -35,12 +35,12 @@ func NewAuthHandler(
 	tokenService TokenServicer,
 	logger *logger.MyLogger,
 	timeout time.Duration,
-) (*Auth, error) {
+) (*AuthHandler, error) {
 	if userService == nil || tokenService == nil || logger == nil {
 		return nil, errors.New("nil pointers in NewAuthHandler constructor")
 	}
 
-	return &Auth{
+	return &AuthHandler{
 		userService:  userService,
 		tokenService: tokenService,
 		log:          logger,
@@ -49,7 +49,7 @@ func NewAuthHandler(
 	}, nil
 }
 
-func (h *Auth) DummyLogin(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	var roleDto dto.PostDummyLoginJSONBody
 	if err := dto.Parse(r.Body, &roleDto); err != nil {
 		h.log.HTTPError(w, http.StatusBadRequest, err)
@@ -69,7 +69,7 @@ func (h *Auth) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	h.log.HTTPResponse(w, http.StatusOK, token)
 }
 
-func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var userDto dto.PostRegisterJSONBody
 	if err := dto.Parse(r.Body, &userDto); err != nil {
 		h.log.HTTPError(w, http.StatusBadRequest, err)
@@ -92,7 +92,7 @@ func (h *Auth) Register(w http.ResponseWriter, r *http.Request) {
 	h.log.HTTPResponse(w, http.StatusCreated, user)
 }
 
-func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var userDto dto.PostLoginJSONBody
 	if err := dto.Parse(r.Body, &userDto); err != nil {
 		h.log.HTTPError(w, http.StatusUnauthorized, err)

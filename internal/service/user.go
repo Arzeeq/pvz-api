@@ -14,6 +14,7 @@ var (
 	ErrPasswordHashing = errors.New("failed to hash password")
 	ErrTokenCreation   = errors.New("failed to cretate jwt token")
 	ErrUserExists      = errors.New("user is already exists")
+	ErrNilInConstruct  = errors.New("nil values passed into constructor")
 )
 
 type UserStorager interface {
@@ -33,10 +34,13 @@ type UserService struct {
 
 func NewUserService(storage UserStorager, tokenService TokenServicer) (*UserService, error) {
 	if storage == nil || tokenService == nil {
-		return nil, errors.New("nil values in NewUserService constructor")
+		return nil, ErrNilInConstruct
 	}
 
-	return &UserService{storage: storage, tokenService: tokenService}, nil
+	return &UserService{
+		storage:      storage,
+		tokenService: tokenService,
+	}, nil
 }
 
 func (s *UserService) RegisterUser(ctx context.Context, payload dto.PostRegisterJSONBody) (*dto.User, error) {

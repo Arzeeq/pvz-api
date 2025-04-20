@@ -34,7 +34,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, payload dto.PostRegisterJS
 		Suffix("RETURNING id, email, role").
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build query: %w", err)
+		return nil, ErrBuildQuery
 	}
 
 	var user dto.User
@@ -53,7 +53,7 @@ func (s *UserStorage) GetUserPassword(ctx context.Context, email string) (string
 		Where(squirrel.Eq{"email": email}).
 		ToSql()
 	if err != nil {
-		return "", fmt.Errorf("failed to build query: %w", err)
+		return "", ErrBuildQuery
 	}
 
 	var hashedPassword string
@@ -72,7 +72,7 @@ func (s *UserStorage) GetUserByEmail(ctx context.Context, email string) (*dto.Us
 		Where(squirrel.Eq{"email": email}).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build query: %w", err)
+		return nil, ErrBuildQuery
 	}
 
 	var user dto.User
