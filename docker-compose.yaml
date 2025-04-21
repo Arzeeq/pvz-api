@@ -25,6 +25,7 @@ services:
       ports:
         - "8080:8080"
         - "3000:3000"
+        - "9000:9000"
       environment:
         - DATABASE_PORT=5432
         - DATABASE_USER=postgres
@@ -33,6 +34,7 @@ services:
         - DATABASE_HOST=db
         - HTTP_PORT=8080
         - GRPC_PORT=3000
+        - PROMETHEUS_PORT=9000
         - JWT_SECRET=MyJWTSecret
         - CONFIG_PATH=./configs/prod.yaml
       depends_on:

@@ -27,6 +27,7 @@ type Config struct {
 	JWTSecret      string        `yaml:"-"`
 	HTTPPort       int           `yaml:"-"`
 	GRPCPort       int           `yaml:"-"`
+	PrometheusPort int           `yaml:"-"`
 }
 
 type DBParam struct {
@@ -62,6 +63,12 @@ func MustLoad(configPath string) *Config {
 		log.Fatalf("failed to read gRPC port from env: %s", err)
 	}
 	cfg.GRPCPort = grpcPort
+
+	promPort, err := strconv.Atoi(os.Getenv("PROMETHEUS_PORT"))
+	if err != nil {
+		log.Fatalf("failed to read Prometheus port from env: %s", err)
+	}
+	cfg.PrometheusPort = promPort
 
 	cfg.JWTSecret = os.Getenv("JWT_SECRET")
 

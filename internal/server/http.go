@@ -10,6 +10,7 @@ import (
 	"github.com/Arzeeq/pvz-api/internal/logger"
 	"github.com/Arzeeq/pvz-api/internal/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type HTTPServer struct {
@@ -34,6 +35,8 @@ func NewHTTP(
 	}
 
 	// without authorization
+	r.Use(middleware.PrometheusMiddleware)
+	r.Handle("/metrics", promhttp.Handler())
 	r.Post("/dummyLogin", auth.DummyLogin)
 	r.Post("/register", auth.Register)
 	r.Post("/login", auth.Login)

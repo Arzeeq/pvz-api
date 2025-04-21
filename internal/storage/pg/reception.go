@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Arzeeq/pvz-api/internal/dto"
+	"github.com/Arzeeq/pvz-api/internal/metrics"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -53,6 +54,7 @@ func (s *ReceptionStorage) CreateReception(ctx context.Context, pvzID openapi_ty
 		return nil, fmt.Errorf("failed to create reception: %w", err)
 	}
 
+	metrics.ReceptionsCreatedTotal.Inc()
 	return &reception, nil
 }
 
@@ -84,36 +86,6 @@ func (s *ReceptionStorage) CloseReception(ctx context.Context, pvzID openapi_typ
 
 	return &reception, nil
 }
-
-// func (s *ReceptionStorage) GetActiveReception(ctx context.Context, pvzID openapi_types.UUID) (*dto.Reception, error) {
-// 	query, args, err := s.builder.
-// 		Select("id", "date_time", "pvz_id", "status").
-// 		From("receptions").
-// 		Where(squirrel.Eq{
-// 			"pvz_id": pvzID,
-// 			"status": dto.InProgress,
-// 		}).
-// 		ToSql()
-// 	if err != nil {
-// 		return nil, ErrBuildQuery
-// 	}
-
-// 	var reception dto.Reception
-// 	err = s.pool.QueryRow(ctx, query, args...).Scan(
-// 		&reception.Id,
-// 		&reception.DateTime,
-// 		&reception.PvzId,
-// 		&reception.Status,
-// 	)
-// 	if err != nil {
-// 		if errors.Is(err, pgx.ErrNoRows) {
-// 			return nil, ErrNoActiveReception
-// 		}
-// 		return nil, fmt.Errorf("failed to get active reception: %w", err)
-// 	}
-
-// 	return &reception, nil
-// }
 
 func (s *ReceptionStorage) GetPVZReceptionsFiltered(ctx context.Context, pvzID openapi_types.UUID, startDate, endDate time.Time) []dto.Reception {
 	query, args, err := s.builder.

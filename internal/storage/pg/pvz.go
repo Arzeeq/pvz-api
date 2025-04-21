@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Arzeeq/pvz-api/internal/dto"
+	"github.com/Arzeeq/pvz-api/internal/metrics"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -56,6 +57,7 @@ func (s *PVZStorage) CreatePVZ(ctx context.Context, payload dto.PostPvzJSONReque
 		return nil, fmt.Errorf("failed to create PVZ: %w", err)
 	}
 
+	metrics.PvzCreatedTotal.Inc()
 	return &pvz, nil
 }
 

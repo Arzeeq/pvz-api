@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Arzeeq/pvz-api/internal/dto"
+	"github.com/Arzeeq/pvz-api/internal/metrics"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -105,6 +106,7 @@ func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostP
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 
+	metrics.ProductsAddedTotal.Inc()
 	return &product, nil
 }
 
