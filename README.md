@@ -99,14 +99,16 @@ go test -v ./internal/test
 Для генерации DTO используется пакет [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen).    
 В директории `internal/dto` лежит файл [generate.go](internal/dto/generate.go), который отвечает за генерацию, и [cfg.yaml](internal/dto/cfg.yaml) для настройки конфигурации.
 
-## Github Actions
-Настроен `workflow`, который при пуше в ветку автоматически запускает golangci-lint и тесты.
 Для генерации gRPC кода можно воспользоваться утилитой `protoc`.
 Из корня проекта нужно запустить
 
 ```bash
 protoc --go-grpc_out=. --go_out=. --go-grpc_opt=module=github.com/Arzeeq/pvz-api --go_opt=module=github.com/Arzeeq/pvz-api ./api/pvz.proto
 ```
+
+## Github Actions
+Настроен `workflow`, который при пуше в ветку автоматически запускает golangci-lint и тесты.
+
 
 > [!NOTE]
 > Если бы на выполнение задания было выделено больше времени, то я бы обязательно сделал следующие вещи:
