@@ -1,5 +1,5 @@
 # PVZ api
-
+[![Main workflow](https://github.com/Arzeeq/pvz-api/actions/workflows/main.yml/badge.svg)](https://github.com/Arzeeq/pvz-api/actions/workflows/main.yml)
 ## Описание
 
 [Тестовое задание](https://github.com/avito-tech/tech-internship/blob/main/Tech%20Internships/Backend/Backend-trainee-assignment-spring-2025/Backend-trainee-assignment-spring-2025.md) для стажёра Backend-направления (весенняя волна 2025)
@@ -99,8 +99,16 @@ go test -v ./internal/test
 Для генерации DTO используется пакет [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen).    
 В директории `internal/dto` лежит файл [generate.go](internal/dto/generate.go), который отвечает за генерацию, и [cfg.yaml](internal/dto/cfg.yaml) для настройки конфигурации.
 
+## Github Actions
+Настроен `workflow`, который при пуше в ветку автоматически запускает golangci-lint и тесты.
 Для генерации gRPC кода можно воспользоваться утилитой `protoc`.
 Из корня проекта нужно запустить
+
 ```bash
 protoc --go-grpc_out=. --go_out=. --go-grpc_opt=module=github.com/Arzeeq/pvz-api --go_opt=module=github.com/Arzeeq/pvz-api ./api/pvz.proto
 ```
+
+> [!NOTE]
+> Если бы на выполнение задания было выделено больше времени, то я бы обязательно сделал следующие вещи:
+> - Добавил больше интеграционных тестов, чтобы проверить различные сценарии работы приложения, в том числе случаи, когда должны срабатывать ограничения (например запрет на создание приемки, если в данном ПВЗ уже открыта другая приемка);
+> - Нагрузочное тестирование с использованием k6, для того чтобы убедиться что сервер api удовлетворяет нефункциональным требованиям
