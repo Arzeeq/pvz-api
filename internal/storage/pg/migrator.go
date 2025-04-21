@@ -2,6 +2,7 @@ package pg
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -23,7 +24,12 @@ func (m *Migrator) Up() error {
 	if err != nil {
 		return err
 	}
-	defer mig.Close()
+	defer func() {
+		errSource, errDatabase := mig.Close()
+		if errSource != nil || errDatabase != nil {
+			log.Fatalf("error in migration close: %v, %v", errSource, errDatabase)
+		}
+	}()
 
 	if err = mig.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("failed to apply migrations: %w", err)
@@ -37,7 +43,12 @@ func (m *Migrator) Down() error {
 	if err != nil {
 		return err
 	}
-	defer mig.Close()
+	defer func() {
+		errSource, errDatabase := mig.Close()
+		if errSource != nil || errDatabase != nil {
+			log.Fatalf("error in migration close: %v, %v", errSource, errDatabase)
+		}
+	}()
 
 	if err := mig.Down(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("failed to rollback migrations: %w", err)

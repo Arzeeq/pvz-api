@@ -78,7 +78,7 @@ func MustLoad(configPath string) *Config {
 	cfg.DBHost = os.Getenv("DATABASE_HOST")
 	cfg.DBPort = os.Getenv("DATABASE_PORT")
 	cfg.DBName = os.Getenv("DATABASE_NAME")
-	cfg.ConnectionStr = cfg.DBParam.GetConnStr()
+	cfg.ConnectionStr = cfg.GetConnStr()
 
 	return &cfg
 }
