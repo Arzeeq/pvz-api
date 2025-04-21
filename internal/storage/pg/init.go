@@ -6,11 +6,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitDB(connStr string) (*pgxpool.Pool, error) {
+// return connection of pool, defer func, and error if is
+func InitDB(connStr string) (*pgxpool.Pool, func(), error) {
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return pool, nil
+	return pool, func() { pool.Close() }, nil
 }

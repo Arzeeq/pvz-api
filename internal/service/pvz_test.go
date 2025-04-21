@@ -26,6 +26,10 @@ func (m *mockPVZStorage) GetPVZs(ctx context.Context, params dto.GetPvzParams) (
 	return args.Get(0).([]dto.PVZ), args.Error(1)
 }
 
+func (m *mockPVZStorage) GetAllPVZs(ctx context.Context) []dto.PVZ {
+	return nil
+}
+
 func TestPVZService_CreatePVZ(t *testing.T) {
 	// preparaion
 	now := time.Now()

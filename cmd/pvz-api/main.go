@@ -1,17 +1,14 @@
 package main
 
 import (
-	"context"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/Arzeeq/pvz-api/cmd/pvz-api/app"
 	"github.com/Arzeeq/pvz-api/internal/config"
 	"github.com/Arzeeq/pvz-api/internal/logger"
-	"github.com/Arzeeq/pvz-api/internal/server"
 )
 
 func main() {
@@ -20,15 +17,14 @@ func main() {
 	l := logger.New(cfg.Env, cfg.LoggerFormat)
 	l.Info("config loaded successfully", slog.String("env", cfg.Env))
 
-	// create server instance
-	s, err := server.New(cfg, l)
+	app, deferFn, err := app.NewApplication(cfg, l)
 	if err != nil {
-		l.WrapError("failed to create a server instance", err)
+		l.WrapError("failed to create application instance", err)
 	}
+	defer deferFn()
 
-	// run server
 	go func() {
-		if err := s.Run(); err != nil && err != http.ErrServerClosed {
+		if err := app.Run(); err != nil {
 			l.WrapError("application has encountered an error", err)
 		}
 	}()
@@ -37,16 +33,5 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	l.Info("Gracefully shutting down server")
-
-	// shutting down server
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := s.Shutdown(ctx); err != nil {
-		l.WrapError("Server shutdown has encountered an error", err)
-	}
-
-	// waiting for timeout
-	<-ctx.Done()
-	l.Info("Server was shut down")
+	l.Info("Gracefully shutting down application")
 }

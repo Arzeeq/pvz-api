@@ -24,13 +24,15 @@ services:
       container_name: avito-backend
       ports:
         - "8080:8080"
+        - "3000:3000"
       environment:
         - DATABASE_PORT=5432
         - DATABASE_USER=postgres
         - DATABASE_PASSWORD=MyPostgresPassword
         - DATABASE_NAME=pvz-db
         - DATABASE_HOST=db
-        - SERVER_PORT=8080
+        - HTTP_PORT=8080
+        - GRPC_PORT=3000
         - JWT_SECRET=MyJWTSecret
         - CONFIG_PATH=./configs/prod.yaml
       depends_on:

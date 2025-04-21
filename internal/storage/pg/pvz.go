@@ -76,7 +76,7 @@ func (s *PVZStorage) GetPVZs(ctx context.Context, params dto.GetPvzParams) ([]dt
 		ToSql()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to build query: %w", err)
+		return nil, ErrBuildQuery
 	}
 
 	rows, err := s.pool.Query(ctx, query, args...)
@@ -103,4 +103,40 @@ func (s *PVZStorage) GetPVZs(ctx context.Context, params dto.GetPvzParams) ([]dt
 	}
 
 	return pvzs, nil
+}
+
+func (s *PVZStorage) GetAllPVZs(ctx context.Context) []dto.PVZ {
+	query, args, err := s.builder.
+		Select("pvz.id", "pvz.registration_date", "pvz.city").
+		From("pvz").
+		ToSql()
+
+	if err != nil {
+		return nil
+	}
+
+	rows, err := s.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var pvzs []dto.PVZ
+	for rows.Next() {
+		var pvz dto.PVZ
+		if err := rows.Scan(
+			&pvz.Id,
+			&pvz.RegistrationDate,
+			&pvz.City,
+		); err != nil {
+			return nil
+		}
+		pvzs = append(pvzs, pvz)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil
+	}
+
+	return pvzs
 }

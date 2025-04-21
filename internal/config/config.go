@@ -25,7 +25,8 @@ type Config struct {
 	RequestTimeout time.Duration `yaml:"request_timeout" env-default:"5s"`
 	ConnectionStr  string        `yaml:"-"`
 	JWTSecret      string        `yaml:"-"`
-	ServerPort     int           `yaml:"-"`
+	HTTPPort       int           `yaml:"-"`
+	GRPCPort       int           `yaml:"-"`
 }
 
 type DBParam struct {
@@ -50,11 +51,17 @@ func MustLoad(configPath string) *Config {
 		log.Fatalf("cannot read config: %s", err)
 	}
 
-	serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	httpPort, err := strconv.Atoi(os.Getenv("HTTP_PORT"))
 	if err != nil {
-		log.Fatalf("failed to read server port from env: %s", err)
+		log.Fatalf("failed to read HTTP port from env: %s", err)
 	}
-	cfg.ServerPort = serverPort
+	cfg.HTTPPort = httpPort
+
+	grpcPort, err := strconv.Atoi(os.Getenv("GRPC_PORT"))
+	if err != nil {
+		log.Fatalf("failed to read gRPC port from env: %s", err)
+	}
+	cfg.GRPCPort = grpcPort
 
 	cfg.JWTSecret = os.Getenv("JWT_SECRET")
 

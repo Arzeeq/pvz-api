@@ -66,16 +66,6 @@ func (s *ProductStorage) GetReceptionProducts(ctx context.Context, receptionId o
 }
 
 func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostProductsJSONBody) (*dto.Product, error) {
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
-			fmt.Println("error rollback transaction")
-		}
-	}()
-
 	receptionQuery, receptionArgs, err := s.builder.
 		Select("id").
 		From("receptions").
@@ -83,14 +73,13 @@ func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostP
 			"pvz_id": productDto.PvzId,
 			"status": "in_progress",
 		}).
-		Suffix("FOR UPDATE").
 		ToSql()
 	if err != nil {
 		return nil, ErrBuildQuery
 	}
 
 	var receptionID openapi_types.UUID
-	err = tx.QueryRow(ctx, receptionQuery, receptionArgs...).Scan(&receptionID)
+	err = s.pool.QueryRow(ctx, receptionQuery, receptionArgs...).Scan(&receptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +95,7 @@ func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostP
 	}
 
 	var product dto.Product
-	err = tx.QueryRow(ctx, productQuery, productArgs...).Scan(
+	err = s.pool.QueryRow(ctx, productQuery, productArgs...).Scan(
 		&product.Id,
 		&product.DateTime,
 		&product.Type,
@@ -114,10 +103,6 @@ func (s *ProductStorage) CreateProduct(ctx context.Context, productDto dto.PostP
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create product: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return &product, nil

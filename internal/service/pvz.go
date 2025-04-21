@@ -12,6 +12,7 @@ var ErrPVZCreate = errors.New("failed to create PVZ")
 type PVZStorager interface {
 	CreatePVZ(ctx context.Context, payload dto.PostPvzJSONRequestBody) (*dto.PVZ, error)
 	GetPVZs(ctx context.Context, params dto.GetPvzParams) ([]dto.PVZ, error)
+	GetAllPVZs(ctx context.Context) []dto.PVZ
 }
 
 type PVZService struct {
@@ -73,4 +74,8 @@ func (s *PVZService) GetPVZWithReceptionsFiltered(ctx context.Context, payload d
 	}
 
 	return result
+}
+
+func (s *PVZService) GetPVZs(ctx context.Context) []dto.PVZ {
+	return s.pvzStorage.GetAllPVZs(ctx)
 }

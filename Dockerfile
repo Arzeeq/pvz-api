@@ -14,4 +14,5 @@ COPY --from=builder /avito/internal/storage/pg/migrations ./migrations
 COPY --from=builder /avito/configs ./configs
 RUN apk --no-cache add ca-certificates
 EXPOSE 8080
+EXPOSE 3000
 CMD ["./pvz-api"]
